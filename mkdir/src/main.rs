@@ -1,7 +1,8 @@
 extern crate clap;
 use std::{
     collections::LinkedList,
-    fs::create_dir,
+    fs::{create_dir, set_permissions, Permissions},
+    os::unix::fs::PermissionsExt,
     path::{Path, PathBuf},
     str::FromStr,
 };
@@ -28,12 +29,16 @@ struct Args {
     /// Print version information and exit
     #[arg(long, default_value_t = false)]
     version: bool,
+
+    /// Set the mode of the created directories to the specified mode
+    #[arg(short, long, default_value = "755")]
+    mode: String,
 }
 
-fn create(dir: &str, parents: bool, verbose: bool) {
+fn create(dir: &str, parents: bool, verbose: bool, mode: u32) {
     if !parents {
         let path = Path::new(&dir);
-        _create(path, verbose);
+        _create(path, verbose, mode);
         return;
     }
 
@@ -64,13 +69,13 @@ fn create(dir: &str, parents: bool, verbose: bool) {
         to_create.push_front(path);
     }
     for p in to_create {
-        if _create(&p, verbose) != 0 {
+        if _create(&p, verbose, mode) != 0 {
             return;
         }
     }
 }
 
-fn _create(path: &Path, verbose: bool) -> u8 {
+fn _create(path: &Path, verbose: bool, mode: u32) -> u8 {
     if let Err(e) = create_dir(path) {
         eprintln!("Cannot create directory \"{}\": {}", path.display(), e);
         return 1;
@@ -78,6 +83,15 @@ fn _create(path: &Path, verbose: bool) -> u8 {
     if verbose {
         println!("Created directory '{}'", path.display());
     }
+    if let Err(e) = set_permissions(path, Permissions::from_mode(mode)) {
+        eprintln!(
+            "Cannot set permissions for directory \"{}\": {}",
+            path.display(),
+            e
+        );
+        return 1;
+    }
+
     return 0;
 }
 
@@ -89,10 +103,12 @@ fn main() {
         return;
     }
     if args.directires.is_empty() {
-        eprintln!("mkdir: missing operand");
+        eprintln!("Missing [DIRECTORIES]...");
         eprintln!("Try 'mkdir --help' for more information.");
         return;
     }
+
+    let mode = u32::from_str_radix(&args.mode, 8).expect("Invalid mode");
 
     for dir in args.directires {
         let path = Path::new(&dir);
@@ -107,6 +123,6 @@ fn main() {
                 }
             }
         }
-        create(&dir, args.parents, args.verbose);
+        create(&dir, args.parents, args.verbose, mode);
     }
 }
