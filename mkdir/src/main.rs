@@ -9,10 +9,8 @@ use std::{
 
 use clap::Parser;
 
-const VERSION: &str = env!("CARGO_PKG_VERSION");
-const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
-
 #[derive(Parser)]
+#[clap(version, author)]
 struct Args {
     /// Directories to create
     directires: Vec<String>,
@@ -25,10 +23,6 @@ struct Args {
     /// Print a message for each created directory
     #[arg(short, long, default_value_t = false)]
     verbose: bool,
-
-    /// Print version information and exit
-    #[arg(long, default_value_t = false)]
-    version: bool,
 
     /// Set the mode of the created directories to the specified mode
     #[arg(short, long, default_value = "755")]
@@ -97,11 +91,11 @@ fn _create(path: &Path, verbose: bool, mode: u32) -> u8 {
 
 fn main() {
     let args = Args::parse();
-    if args.version {
-        println!("mkdir v{}", VERSION);
-        println!("Written by {}", AUTHORS);
-        return;
-    }
+    // if args.version {
+    //     println!("mkdir v{}", VERSION);
+    //     println!("Written by {}", AUTHORS);
+    //     return;
+    // }
     if args.directires.is_empty() {
         eprintln!("Missing [DIRECTORIES]...");
         eprintln!("Try 'mkdir --help' for more information.");
