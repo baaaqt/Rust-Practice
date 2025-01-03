@@ -11,4 +11,4 @@ This repository is designed to:
 
 # Projects
 ## [mkdir](https://github.com/baaaqt/Rust-Practice/tree/master/mkdir)
-Implementation of the [mkdir](https://en.wikipedia.org/wiki/Mkdir) CLI tool.
+Implementation of the [mkdir](https://en.wikipedia.org/wiki/Mkdir) CLI tool on rust.
