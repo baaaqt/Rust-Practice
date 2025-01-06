@@ -4,7 +4,6 @@ use std::{
     fs::{create_dir, set_permissions, Permissions},
     os::unix::fs::PermissionsExt,
     path::{Path, PathBuf},
-    str::FromStr,
 };
 
 use clap::Parser;
@@ -36,32 +35,16 @@ fn create(dir: &str, parents: bool, verbose: bool, mode: u32) {
         return;
     }
 
-    let from_root = dir.starts_with('/');
-    let mut parts = dir.split('/').collect::<Vec<&str>>();
-    if parts.is_empty() {
-        return;
-    }
-
-    if parts[0] == "" {
-        parts = parts[1..].to_vec();
-    }
-
+    let mut path = PathBuf::from(dir);
     let mut to_create: LinkedList<PathBuf> = LinkedList::new();
 
-    for i in (0..parts.len()).rev() {
-        let strpath: String;
-        if from_root {
-            strpath = "/".to_string() + &parts[0..=i].join("/");
-        } else {
-            strpath = parts[0..=i].join("/");
-        }
-
-        let path = PathBuf::from_str(&strpath).unwrap();
-        if path.exists() {
+    while !path.exists() && !(path == Path::new(&"")) {
+        to_create.push_front(path.clone());
+        if !path.pop() {
             break;
         }
-        to_create.push_front(path);
     }
+
     for p in to_create {
         if _create(&p, verbose, mode) != 0 {
             return;
